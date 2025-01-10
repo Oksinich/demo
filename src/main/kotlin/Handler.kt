@@ -1,5 +1,3 @@
-
-
 // Абстракция для Handler, который отправляет сообщения в Looper
 abstract class Handler(private val looper: Looper) {
 

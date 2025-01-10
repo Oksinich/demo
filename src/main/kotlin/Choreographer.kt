@@ -1,9 +1,11 @@
-class Choreographer {
+class Choreographer(private val vsyncSource: VSync, private val uiHandler: UiHandler) {
+
     private var frameCallback: FrameCallback? = null
     private var vsync:VSync? = null
 
-    fun connectVSync(vsync: VSync){
-        this.vsync = vsync
+    init {
+        vsync = vsyncSource
+        scheduleVsyncFrame()
     }
 
 
@@ -11,9 +13,10 @@ class Choreographer {
         frameCallback = callback
     }
 
-    fun scheduleFrame() {
+    private fun scheduleVsyncFrame() {
         println("scheduleFrame")
         vsync?.start{
+            uiHandler.sendMessage(Message(1, "do frame"))
             frameCallback?.doFrame()
         }
     }

@@ -24,33 +24,30 @@ fun main() = application {
             )
         )
     }
-    val viewManager = ViewManager(parentData)
 
-    val choreographer = Choreographer()
-    val vsync = VSync()
-    // Хореографер начинает следить за vsync
-    choreographer.connectVSync(vsync)
-    val looper = Looper()
+
     // Создается активити тред
-    val activityThread = ActivityThread(looper, choreographer)
-    // Запускается поток
-    Thread {
-        looper.loop()
-    }.start()
-    // Активити тред говорит что готов ебашить и сообщает хореограферу что надо запланировать кадр
-    activityThread.handleResumeActivity()
+    ActivityThread.main()
+    ActivityThread.viewRootImpl.setViewHierarchy(parentData)
 
     // Создаем хендлер юай потока
-    val uiHandler = UiHandler(looper, viewManager)
-    // Суем его в лупер, чтоб лупер отправлял в этот хендлер нужные сообщения
-    looper.registerHandler(1, uiHandler)
+    val uiHandler = UiHandler(Looper, ActivityThread.viewRootImpl)
 
-    // Когда хореографер получает сигнал, то отправляется событие типо parentData.value надо отобразить
-    choreographer.postFrameCallback(FrameCallback {
-        uiHandler.sendMessage(Message(1, parentData.value))
-    })
+    val vsync = VSync()
+    val choreographer = Choreographer(vsync, uiHandler)
+    ActivityThread.viewRootImpl.setChoreographer(choreographer)
+
+    // Суем юай хендлео в лупер, чтоб лупер отправлял в этот хендлер нужные сообщения
+    Looper.registerHandler(1, uiHandler)
 
     Window(onCloseRequest = ::exitApplication) {
-        ViewGroup(parentData.value, viewManager.buffer)
+        ViewGroup(parentData.value, ActivityThread.viewRootImpl.buffer)
+        ActivityThread.viewRootImpl.addOnViewUpdatedListener(
+           object :OnViewUpdatedListener {
+               override fun onViewUpdated(updatedViews: MutableState<ViewGroupData>) {
+                   parentData.value = updatedViews.value
+               }
+           }
+        )
     }
 }

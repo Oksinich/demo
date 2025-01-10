@@ -1,16 +1,19 @@
+import java.util.concurrent.ConcurrentLinkedQueue
 
+object Looper {
 
-class Looper {
-
-    private val messageQueue = mutableListOf<Message>()
+    private val messageQueue: ConcurrentLinkedQueue<Message> = ConcurrentLinkedQueue()
     private var isRunning = true
+
+    fun prepareMainLooper() {
+        // инициализируется лупер
+    }
 
     fun loop() {
         println("loop")
         while (isRunning) {
             if (messageQueue.isNotEmpty()) {
-                println("messageQueue.isNotEmpty()")
-                val message = messageQueue.removeFirst()
+                val message = messageQueue.poll()
                 handlers[message.what]?.handleMessage(message)
                 println("handleMessage")
             }
@@ -19,12 +22,8 @@ class Looper {
 
     private val handlers = mutableMapOf<Int, Handler>()
 
-    fun registerHandler(messageType:Int, handler:Handler){
+    fun registerHandler(messageType: Int, handler: Handler) {
         handlers[messageType] = handler
-    }
-
-    fun quit() {
-        isRunning = false
     }
 
     fun post(message: Message) {
